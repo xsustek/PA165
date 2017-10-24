@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cz.fi.muni.carshop.CarShopStorage;
 import cz.fi.muni.carshop.entities.Car;
 import cz.fi.muni.carshop.enums.CarTypes;
+import cz.fi.muni.carshop.exceptions.RequestedCarNotFoundException;
 
 public class CarShopStorageServiceImpl implements CarShopStorageService {
 
@@ -30,7 +32,21 @@ public class CarShopStorageServiceImpl implements CarShopStorageService {
 
 	@Override
 	public void addCarToStorage(Car car) {
+		if(car.getPrice() < 0) throw new IllegalArgumentException("Price is less than zero");
 		CarShopStorage.getInstancce().getCars().computeIfAbsent(car.getType(), x -> new ArrayList<>()).add(car);
 	}
 
+
+	@Override
+	public void sellCar(Car car) throws RequestedCarNotFoundException {
+		List<Car> carList = CarShopStorage.getInstancce().getCars().get(car.getType());
+		if(carList == null){
+			throw new RequestedCarNotFoundException("Not found");
+		}
+		Stream<Car> carStream = carList.stream().filter(c -> c.equals(car));
+		if(carStream.count() != 1){
+			throw new RequestedCarNotFoundException("Not found");
+		}
+
+	}
 }
